@@ -1,0 +1,15 @@
+/node_modules/
+/build/
+/dist/
+/docs/
+/lib/
+.idea/*
+**/.cache
+
+.DS_Store
+coverage
+/src/data/private-key
+TODOS.md
+*.log
+# *current-metadata-cache.json
+# *current-metadata-cache
