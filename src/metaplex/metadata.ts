@@ -99,7 +99,7 @@ export async function createMetadata(
     data: Data,
     updateAuthority: StringPublicKey,
     mintKey: StringPublicKey,
-    mintAuthorityKey: StringPublicKey,
+    mintAuthorityKey: StringPublicKey | null,
     payer: StringPublicKey,
 ): Promise<TransactionInstruction> {
     const metadataProgramId = METAPLEX;
@@ -127,8 +127,9 @@ export async function createMetadata(
             isWritable: false,
         },
         {
-            pubkey: new PublicKey(mintAuthorityKey),
-            isSigner: true,
+            pubkey: mintAuthorityKey ? new PublicKey(mintAuthorityKey) : new PublicKey(0),
+            isSigner: false,
+            // isSigner: true,
             isWritable: false,
         },
         {
@@ -152,6 +153,8 @@ export async function createMetadata(
             isWritable: false,
         },
     ];
+
+    console.log(keys, 'keys');
 
     return new TransactionInstruction({
         keys,

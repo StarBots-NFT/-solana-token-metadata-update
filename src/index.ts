@@ -2,6 +2,7 @@
 
 import { program } from 'commander';
 import bs58 from 'bs58';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Keypair, PublicKey, Connection, clusterApiUrl, Cluster, Transaction } from '@solana/web3.js';
 import { getMultipleAccounts, sendSignedTransaction, loadMetadata, readPrivateKey } from './utils';
 import { Data } from './metaplex/classes';
@@ -136,7 +137,7 @@ program
                         updatedData,
                         walletKeyPair.publicKey.toBase58(), // newUpdateAuthority
                         mintKey,
-                        walletKeyPair.publicKey.toBase58(), // updateAuthority
+                        null, // updateAuthority walletKeyPair.publicKey.toBase58(), // updateAuthority
                         walletKeyPair.publicKey.toBase58(),
                     ),
                 );
@@ -162,4 +163,45 @@ program
         }
     });
 
+program
+.command('lock')
+.option('-e, --env <string>', 'Solana cluster env name. One of: mainnet-beta, testnet, devnet', 'devnet')
+// .option('-k, --keypair <path>', 'Solana wallet location', '--keypair not provided')
+.action(async (_directory, cmd) => {
+    try {
+        const { env } = cmd.opts();
+
+        const connection = getConnection(env);
+
+        const decoded = bs58.decode(readPrivateKey());
+
+        const walletKeyPair = Keypair.fromSecretKey(decoded);
+
+        // if not found, add instruction create account
+        for (let index = 0; index < cmd.args.length; index++) {
+            const tokenMint = new PublicKey(cmd.args[index]);
+            const token = new Token(connection, tokenMint, TOKEN_PROGRAM_ID, walletKeyPair);
+            const txid = await token.setAuthority(tokenMint, null, 'MintTokens', walletKeyPair.publicKey, [walletKeyPair])
+            console.log('✅ Tx was successful! ID: ', txid);
+        }
+    } catch (error) {
+        console.warn(`🚫 failed to set with error:`, error.message);
+    }
+});
+
 program.parse(process.argv);
+
+
+
+// import { Connection, clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
+
+// (async () => {
+//   const connection = new Connection(clusterApiUrl('mainnet-beta'))
+
+//   const bytes = bs58.decode(process.env.PRIVATE_KEY)
+//   const account = Keypair.fromSecretKey(bytes)
+
+//   const tokenMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
+
+
+// })()
